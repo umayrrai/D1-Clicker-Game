@@ -9,7 +9,6 @@ const app = document.querySelector<HTMLElement>("#app")!;
 const heading = document.createElement("h1");
 heading.textContent = "The Jackpot Hotel";
 
-// 
 const image = document.createElement("img");
 image.src = tileUrl;
 image.alt = "A teal tile with a cream circle";
@@ -17,7 +16,7 @@ image.width = 96;
 image.height = 96;
 
 const message = document.createElement("p");
-message.textContent = "Your project starts here.";
+message.textContent = "HELLO.";
 
 // Step 2 Create a Button
 const hotelButton = document.createElement("button");
