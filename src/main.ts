@@ -11,7 +11,8 @@ let money = 0;
 const clickValue = 1;
 const roomRate = 1;
 
-const bellboyCost = 10;
+let bellboyCost = 10;
+const bellboyCostMultiplier = 1.5;
 let bellboys = 0;
 const guestsPerBellboy = 1;
 
@@ -54,6 +55,7 @@ bellboyButton.addEventListener("click", () => {
   if (money >= bellboyCost) {
     money -= bellboyCost;
     bellboys++;
+    bellboyCost = Math.round(bellboyCost * bellboyCostMultiplier);
     updateDisplay();
   }
 });
@@ -85,8 +87,6 @@ function tick(now: number) {
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
-
-app.append(heading, hotelButton, moneyCounter, counter, stats, store);
 
 app.append(heading, hotelButton, moneyCounter, counter, stats, store);
 updateDisplay();
