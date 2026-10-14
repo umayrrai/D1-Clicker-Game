@@ -16,9 +16,9 @@ const roomRate = 1;
 let bellboyCost = 10;
 const bellboyCostMultiplier = 1.5;
 let bellboys = 0;
-const guestsPerBellboy = 1;
+const guestsPerBellboy = 0.1; // guests per second each bellboy brings in
 
-const moneyPerGuest = 1;
+const moneyPerGuest = 1; // dollars per guest per second
 const averageStayLength = 8; // in seconds
 
 function checkIn(count: number) {
@@ -83,12 +83,14 @@ function incomeRate(): number {
 }
 
 function updateDisplay() {
+  const moneyText = money.toFixed(1);
+  const incomeText = incomeRate().toFixed(1);
+  const passiveText = passiveRate().toFixed(1);
+
   moneyCounter.textContent = `Money: $${Math.floor(money)}`;
   counter.textContent = `Guests checked in: ${Math.floor(guests)}`;
-  stats.textContent =
-    `Manual: ${clickValue} per click | Passive: ${passiveRate()} per second`;
-  bellboyButton.textContent =
-    `🛎️ Hire a bellboy ($${bellboyCost}) - owned: ${bellboys}`;
+  stats.textContent = `Manual: ${clickValue} per click | Passive: ${passiveRate()} per second`;
+  bellboyButton.textContent = `🛎️ Hire a bellboy ($${bellboyCost}) - owned: ${bellboys}`;
   bellboyButton.disabled = money < bellboyCost;
 }
 
@@ -100,6 +102,7 @@ function tick(now: number) {
 
   guests += passiveRate() * seconds; // bellboys bring guests in
   guests *= Math.exp(-seconds / averageStayLength); // guests leave over time
+  if (guests < 0.01) guests = 0; // no guests, no money
   money += incomeRate() * seconds; // present guests pay
 
   updateDisplay();
