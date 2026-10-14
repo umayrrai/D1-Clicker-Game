@@ -1,28 +1,16 @@
-// Vite turns this import into a production-safe URL. Keep it as a file so
-// even this tiny example demonstrates a separately deployed asset.
-// @deno-types="./asset-url.d.ts"
-import tileUrl from "./assets/tile.svg?no-inline";
-
 const app = document.querySelector<HTMLElement>("#app")!;
 
 // Game Name
 const heading = document.createElement("h1");
 heading.textContent = "The Jackpot Hotel";
 
-// Old code for square
-// const image = document.createElement("img");
-// image.src = tileUrl;
-// image.alt = "A teal tile with a cream circle";
-// image.width = 96;
-// image.height = 96;
-
 // Game State
 let guests = 0;
-let clickValue = 1;
+const clickValue = 1;
 
-let bellboyCost = 10;
+const bellboyCost = 10;
 let bellboys = 0;
-let guestsPerBellboy = 1;
+const guestsPerBellboy = 1;
 
 // Counter display
 const counter = document.createElement("p");
@@ -63,7 +51,7 @@ store.append(storeHeading, bellboyButton);
 
 // Helper Functions (Passive Rate and Display Update)
 function passiveRate(): number {
-    return bellboys * guestsPerBellboy;
+  return bellboys * guestsPerBellboy;
 }
 
 function updateDisplay() {
