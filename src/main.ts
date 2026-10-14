@@ -6,7 +6,7 @@ import tileUrl from "./assets/tile.svg?no-inline";
 const app = document.querySelector<HTMLElement>("#app")!;
 
 const heading = document.createElement("h1");
-heading.textContent = "D1 project";
+heading.textContent = "The Jackpot Hotel";
 
 const image = document.createElement("img");
 image.src = tileUrl;
