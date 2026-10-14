@@ -5,7 +5,7 @@ const app = document.querySelector<HTMLElement>("#app")!;
 
 // Game Name
 const heading = document.createElement("h1");
-heading.textContent = "The Jackpot Hotel";
+heading.textContent = "The Infinite Hotel";
 
 // Game State
 let guests = 0;
@@ -17,6 +17,9 @@ let bellboyCost = 10;
 const bellboyCostMultiplier = 1.5;
 let bellboys = 0;
 const guestsPerBellboy = 1;
+
+const moneyPerGuest = 1;
+const averageStayLength = 8; // in seconds
 
 function checkIn(count: number) {
   guests += count;
@@ -75,6 +78,10 @@ function passiveRate(): number {
   return bellboys * guestsPerBellboy;
 }
 
+function incomeRate(): number {
+  return guests * moneyPerGuest;
+}
+
 function updateDisplay() {
   moneyCounter.textContent = `Money: $${Math.floor(money)}`;
   counter.textContent = `Guests checked in: ${Math.floor(guests)}`;
@@ -85,12 +92,16 @@ function updateDisplay() {
   bellboyButton.disabled = money < bellboyCost;
 }
 
-// Passive Income LOOP
+// Game LOOP
 let lastTime = performance.now();
 function tick(now: number) {
   const seconds = (now - lastTime) / 1000;
   lastTime = now;
-  checkIn(passiveRate() * seconds);
+
+  guests += passiveRate() * seconds; // bellboys bring guests in
+  guests *= Math.exp(-seconds / averageStayLength); // guests leave over time
+  money += incomeRate() * seconds; // present guests pay
+
   updateDisplay();
   requestAnimationFrame(tick);
 }
