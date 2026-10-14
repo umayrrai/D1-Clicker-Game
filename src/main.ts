@@ -7,20 +7,68 @@ const app = document.querySelector<HTMLElement>("#app")!;
 const heading = document.createElement("h1");
 heading.textContent = "The Infinite Hotel";
 
-// Game State
 // Game Rules (change these to balance the game)
 const guestsPerClick = 1;
 const stayLength = 10; // each guest stays 10 seconds
-const rentPerSecond = 1; // each guest pays $1 every second they stay
-const secondsPerGuest = 5; // each bellboy brings 1 guest every 5 seconds
-const bellboyCostMultiplier = 1.5;
+const baseRent = 1; // each guest pays $1 every second they stay
+const costMultiplier = 1.5; // each upgrade costs 50% more than the last
+
+const twoStarCost = 1500; // one-time purchase
+const twoStarRentMultiplier = 2; // rent is doubled once you have two stars
 
 // Game State
 let money = 0;
-let bellboys = 0;
-let bellboyCost = 10;
+let hasTwoStar = false;
 let guestTimers: number[] = []; // seconds left for each guest in the hotel
-let bellboyProgress = 0; // how close bellboys are to bringing the next guest
+
+// New Upgrade Template
+interface Generator {
+  icon: string;
+  label: string;
+  secondsPerGuest: number; // each one brings 1 guest every this many seconds
+  cost: number;
+  owned: number;
+  progress: number; // how close it is to bringing the next guest
+  button: HTMLButtonElement;
+}
+
+function makeGenerator(
+  id: string,
+  icon: string,
+  label: string,
+  baseCost: number,
+  secondsPerGuest: number,
+): Generator {
+  const button = document.createElement("button");
+  button.id = `${id}Button`;
+
+  const gen: Generator = {
+    icon,
+    label,
+    secondsPerGuest,
+    cost: baseCost,
+    owned: 0,
+    progress: 0,
+    button,
+  };
+
+  button.addEventListener("click", () => {
+    if (money >= gen.cost) {
+      money -= gen.cost;
+      gen.owned++;
+      gen.cost = Math.round(gen.cost * costMultiplier);
+      updateDisplay();
+    }
+  });
+
+  return gen;
+}
+
+const generators = [
+  makeGenerator("bellboy", "🛎️", "Hire a bellboy", 10, 5),
+  makeGenerator("newspaper", "📰", "Run a newspaper ad", 100, 2),
+  makeGenerator("billboard", "🪧", "Rent a billboard", 1000, 0.5),
+];
 
 // Guest helpers
 function checkInGuest() {
@@ -31,12 +79,20 @@ function guestCount(): number {
   return guestTimers.length;
 }
 
+function currentRent(): number {
+  return hasTwoStar ? baseRent * twoStarRentMultiplier : baseRent;
+}
+
 function incomePerSecond(): number {
-  return guestCount() * rentPerSecond;
+  return guestCount() * currentRent();
 }
 
 function guestsPerMinute(): number {
-  return Math.round((bellboys * 60) / secondsPerGuest);
+  let total = 0;
+  for (const gen of generators) {
+    total += (gen.owned * 60) / gen.secondsPerGuest;
+  }
+  return Math.round(total);
 }
 
 // Displays
@@ -71,43 +127,60 @@ store.id = "store";
 const storeHeading = document.createElement("h2");
 storeHeading.textContent = "Store";
 
-const bellboyButton = document.createElement("button");
-bellboyButton.id = "bellboyButton";
+// Two Star Permanent Upgrade
+const twoStarButton = document.createElement("button");
+twoStarButton.id = "twoStarButton";
 
-bellboyButton.addEventListener("click", () => {
-  if (money >= bellboyCost) {
-    money -= bellboyCost;
-    bellboys++;
-    bellboyCost = Math.round(bellboyCost * bellboyCostMultiplier);
+twoStarButton.addEventListener("click", () => {
+  if (!hasTwoStar && money >= twoStarCost) {
+    money -= twoStarCost;
+    hasTwoStar = true;
     updateDisplay();
   }
 });
 
-store.append(storeHeading, bellboyButton);
+store.append(storeHeading);
+for (const gen of generators) {
+  store.append(gen.button);
+}
+store.append(twoStarButton);
 
 // Display
 function updateDisplay() {
-  moneyCounter.textContent = `Money: $${
-    Math.floor(money)
-  } (+$${incomePerSecond()}/s)`;
+  const rent = currentRent();
+  const perMinute = guestsPerMinute();
+
+  moneyCounter.textContent =
+    `Money: $${Math.floor(money)} (+$${incomePerSecond()}/s)`;
   counter.textContent = `Guests in hotel: ${guestCount()}`;
 
-  if (bellboys === 0) {
-    stats.textContent =
-      `Each guest stays ${stayLength}s and pays $${rentPerSecond}/s`;
+  if (perMinute === 0) {
+    stats.textContent = `Each guest stays ${stayLength}s and pays $${rent}/s`;
   } else {
-    stats.textContent =
-      `Your bellboys bring ${guestsPerMinute()} guests per minute`;
+    stats.textContent = `${perMinute} guests/min, each paying $${rent}/s`;
   }
 
-  bellboyButton.textContent =
-    `🛎️ Hire a bellboy ($${bellboyCost}) - owned: ${bellboys}`;
-  bellboyButton.disabled = money < bellboyCost;
+  for (const gen of generators) {
+    gen.button.textContent =
+      `${gen.icon} ${gen.label} ($${gen.cost}) - owned: ${gen.owned}`;
+    gen.button.disabled = money < gen.cost;
+  }
+
+  if (hasTwoStar) {
+    twoStarButton.textContent = "⭐⭐ Two Star Rating - owned";
+    twoStarButton.disabled = true;
+  } else {
+    twoStarButton.textContent =
+      `⭐⭐ Two Star Rating ($${twoStarCost}) - guests pay 2x`;
+    twoStarButton.disabled = money < twoStarCost;
+  }
 }
 
 // Game Loop
 let lastTime = performance.now();
 function tick(now: number) {
+  requestAnimationFrame(tick);
+
   const seconds = (now - lastTime) / 1000;
   lastTime = now;
 
@@ -119,15 +192,16 @@ function tick(now: number) {
     .map((timeLeft) => timeLeft - seconds)
     .filter((timeLeft) => timeLeft > 0);
 
-  // 3. Bellboys work toward bringing the next guest
-  bellboyProgress += (bellboys / secondsPerGuest) * seconds;
-  while (bellboyProgress >= 1) {
-    checkInGuest();
-    bellboyProgress -= 1;
+  // 3. Every guest-bringing upgrade works toward its next guest
+  for (const gen of generators) {
+    gen.progress += (gen.owned / gen.secondsPerGuest) * seconds;
+    while (gen.progress >= 1) {
+      checkInGuest();
+      gen.progress -= 1;
+    }
   }
 
   updateDisplay();
-  requestAnimationFrame(tick);
 }
 
 app.append(heading, hotelButton, moneyCounter, counter, stats, store);
