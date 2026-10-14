@@ -1,4 +1,6 @@
 import "./style.css";
+// @deno-types="./asset-url.d.ts"
+import hotelUrl from "./assets/hotel.svg?no-inline";
 const app = document.querySelector<HTMLElement>("#app")!;
 
 // Game Name
@@ -32,8 +34,18 @@ const stats = document.createElement("p");
 // Create a Button
 const hotelButton = document.createElement("button");
 hotelButton.id = "hotelButton";
-hotelButton.innerHTML =
-  `<span class="icon">🏨</span><span class="label">Check in a guest</span>`;
+const hotelImage = document.createElement("img");
+hotelImage.src = hotelUrl;
+hotelImage.alt = "";
+hotelImage.width = 160;
+hotelImage.height = 160;
+hotelImage.className = "icon";
+
+const hotelLabel = document.createElement("span");
+hotelLabel.className = "label";
+hotelLabel.textContent = "Check in a guest";
+
+hotelButton.append(hotelImage, hotelLabel);
 
 // Click
 hotelButton.addEventListener("click", () => {
