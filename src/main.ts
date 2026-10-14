@@ -11,7 +11,6 @@ heading.textContent = "The Infinite Hotel";
 let guests = 0;
 let money = 0;
 const clickValue = 1;
-const roomRate = 1;
 
 let bellboyCost = 10;
 const bellboyCostMultiplier = 1.5;
@@ -20,11 +19,6 @@ const guestsPerBellboy = 0.1; // guests per second each bellboy brings in
 
 const moneyPerGuest = 1; // dollars per guest per second
 const averageStayLength = 8; // in seconds
-
-function checkIn(count: number) {
-  guests += count;
-  money += count * roomRate;
-}
 
 // Counter display
 const counter = document.createElement("p");
@@ -46,9 +40,10 @@ hotelImage.className = "icon";
 
 hotelButton.append(hotelImage);
 hotelButton.setAttribute("aria-label", "Check in a guest");
+
 // Click
 hotelButton.addEventListener("click", () => {
-  checkIn(clickValue);
+  guests += clickValue;
   updateDisplay();
 });
 
@@ -87,10 +82,12 @@ function updateDisplay() {
   const incomeText = incomeRate().toFixed(1);
   const passiveText = passiveRate().toFixed(1);
 
-  moneyCounter.textContent = `Money: $${Math.floor(money)}`;
-  counter.textContent = `Guests checked in: ${Math.floor(guests)}`;
-  stats.textContent = `Manual: ${clickValue} per click | Passive: ${passiveRate()} per second`;
-  bellboyButton.textContent = `🛎️ Hire a bellboy ($${bellboyCost}) - owned: ${bellboys}`;
+  moneyCounter.textContent = `Money: $${moneyText} (+$${incomeText}/s)`;
+  counter.textContent = `Guests in hotel: ${guests.toFixed(1)}`;
+  stats.textContent =
+    `Manual: ${clickValue} per click | Passive: ${passiveText} per second`;
+  bellboyButton.textContent =
+    `🛎️ Hire a bellboy ($${bellboyCost}) - owned: ${bellboys}`;
   bellboyButton.disabled = money < bellboyCost;
 }
 
