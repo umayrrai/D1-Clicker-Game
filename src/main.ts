@@ -150,9 +150,9 @@ function updateDisplay() {
   const rent = currentRent();
   const perMinute = guestsPerMinute();
 
-  moneyCounter.textContent =
-    `Money: $${Math.floor(money)} (+$${incomePerSecond()}/s)`;
-  counter.textContent = `Guests in hotel: ${guestCount()}`;
+  const moneyText = Math.floor(money);
+  const incomeText = incomePerSecond();
+  moneyCounter.textContent = `Money: $${moneyText} (+$${incomeText}/s)`;
 
   if (perMinute === 0) {
     stats.textContent = `Each guest stays ${stayLength}s and pays $${rent}/s`;
