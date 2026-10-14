@@ -15,8 +15,11 @@ image.alt = "A teal tile with a cream circle";
 image.width = 96;
 image.height = 96;
 
-const message = document.createElement("p");
-message.textContent = "HELLO.";
+let guests = 0;
+
+// counter display
+const counter = document.createElement("p");
+counter.textContent = `Guests checked in: ${guests}`;
 
 // Step 2 Create a Button
 const hotelButton = document.createElement("button");
@@ -25,7 +28,8 @@ hotelButton.textContent = "Check in a guest.";
 
 // Step 3 Click
 hotelButton.addEventListener("click", () => {
-  console.log("Guest checked in!");
+  guests++;
+  counter.textContent = `Guests checked in: ${guests}`;
 });
 
-app.append(heading, image, message);
+app.append(heading, hotelButton, counter);
