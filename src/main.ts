@@ -37,16 +37,12 @@ hotelButton.id = "hotelButton";
 const hotelImage = document.createElement("img");
 hotelImage.src = hotelUrl;
 hotelImage.alt = "";
-hotelImage.width = 160;
-hotelImage.height = 160;
+hotelImage.width = 300;
+hotelImage.height = 300;
 hotelImage.className = "icon";
 
-const hotelLabel = document.createElement("span");
-hotelLabel.className = "label";
-hotelLabel.textContent = "Check in a guest";
-
-hotelButton.append(hotelImage, hotelLabel);
-
+hotelButton.append(hotelImage);
+hotelButton.setAttribute("aria-label", "Check in a guest");
 // Click
 hotelButton.addEventListener("click", () => {
   checkIn(clickValue);
