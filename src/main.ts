@@ -8,27 +8,44 @@ const heading = document.createElement("h1");
 heading.textContent = "The Infinite Hotel";
 
 // Game State
-let guests = 0;
-let money = 0;
-const clickValue = 1;
-
-let bellboyCost = 10;
+// Game Rules (change these to balance the game)
+const guestsPerClick = 1;
+const stayLength = 10; // each guest stays 10 seconds
+const rentPerSecond = 1; // each guest pays $1 every second they stay
+const secondsPerGuest = 5; // each bellboy brings 1 guest every 5 seconds
 const bellboyCostMultiplier = 1.5;
+
+// Game State
+let money = 0;
 let bellboys = 0;
-const guestsPerBellboy = 0.1; // guests per second each bellboy brings in
+let bellboyCost = 10;
+let guestTimers: number[] = []; // seconds left for each guest in the hotel
+let bellboyProgress = 0; // how close bellboys are to bringing the next guest
 
-const moneyPerGuest = 1; // dollars per guest per second
-const averageStayLength = 8; // in seconds
+// Guest helpers
+function checkInGuest() {
+  guestTimers.push(stayLength);
+}
 
-// Counter display
-const counter = document.createElement("p");
+function guestCount(): number {
+  return guestTimers.length;
+}
+
+function incomePerSecond(): number {
+  return guestCount() * rentPerSecond;
+}
+
+function guestsPerMinute(): number {
+  return Math.round((bellboys * 60) / secondsPerGuest);
+}
+
+// Displays
 const moneyCounter = document.createElement("p");
 moneyCounter.id = "money";
-
-// Stats display
+const counter = document.createElement("p");
 const stats = document.createElement("p");
 
-// Create a Button
+// Hotel Button
 const hotelButton = document.createElement("button");
 hotelButton.id = "hotelButton";
 const hotelImage = document.createElement("img");
@@ -37,13 +54,13 @@ hotelImage.alt = "";
 hotelImage.width = 300;
 hotelImage.height = 300;
 hotelImage.className = "icon";
-
 hotelButton.append(hotelImage);
 hotelButton.setAttribute("aria-label", "Check in a guest");
 
-// Click
 hotelButton.addEventListener("click", () => {
-  guests += clickValue;
+  for (let i = 0; i < guestsPerClick; i++) {
+    checkInGuest();
+  }
   updateDisplay();
 });
 
@@ -68,44 +85,51 @@ bellboyButton.addEventListener("click", () => {
 
 store.append(storeHeading, bellboyButton);
 
-// Helper Functions (Passive Rate and Display Update)
-function passiveRate(): number {
-  return bellboys * guestsPerBellboy;
-}
-
-function incomeRate(): number {
-  return guests * moneyPerGuest;
-}
-
+// Display
 function updateDisplay() {
-  const moneyText = money.toFixed(1);
-  const incomeText = incomeRate().toFixed(1);
-  const passiveText = passiveRate().toFixed(1);
+  moneyCounter.textContent = `Money: $${
+    Math.floor(money)
+  } (+$${incomePerSecond()}/s)`;
+  counter.textContent = `Guests in hotel: ${guestCount()}`;
 
-  moneyCounter.textContent = `Money: $${moneyText} (+$${incomeText}/s)`;
-  counter.textContent = `Guests in hotel: ${guests.toFixed(1)}`;
-  stats.textContent =
-    `Manual: ${clickValue} per click | Passive: ${passiveText} per second`;
+  if (bellboys === 0) {
+    stats.textContent =
+      `Each guest stays ${stayLength}s and pays $${rentPerSecond}/s`;
+  } else {
+    stats.textContent =
+      `Your bellboys bring ${guestsPerMinute()} guests per minute`;
+  }
+
   bellboyButton.textContent =
     `🛎️ Hire a bellboy ($${bellboyCost}) - owned: ${bellboys}`;
   bellboyButton.disabled = money < bellboyCost;
 }
 
-// Game LOOP
+// Game Loop
 let lastTime = performance.now();
 function tick(now: number) {
   const seconds = (now - lastTime) / 1000;
   lastTime = now;
 
-  guests += passiveRate() * seconds; // bellboys bring guests in
-  guests *= Math.exp(-seconds / averageStayLength); // guests leave over time
-  if (guests < 0.01) guests = 0; // no guests, no money
-  money += incomeRate() * seconds; // present guests pay
+  // 1. Guests in the hotel pay rent
+  money += incomePerSecond() * seconds;
+
+  // 2. Each guest's stay counts down; anyone at 0 checks out
+  guestTimers = guestTimers
+    .map((timeLeft) => timeLeft - seconds)
+    .filter((timeLeft) => timeLeft > 0);
+
+  // 3. Bellboys work toward bringing the next guest
+  bellboyProgress += (bellboys / secondsPerGuest) * seconds;
+  while (bellboyProgress >= 1) {
+    checkInGuest();
+    bellboyProgress -= 1;
+  }
 
   updateDisplay();
   requestAnimationFrame(tick);
 }
-requestAnimationFrame(tick);
 
 app.append(heading, hotelButton, moneyCounter, counter, stats, store);
 updateDisplay();
+requestAnimationFrame(tick);
